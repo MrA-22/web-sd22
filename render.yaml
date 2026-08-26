@@ -1,5 +1,4 @@
 services:
-  # Konfigurasi Backend (Laravel Docker)
   - type: web
     name: websekolah-backend
     runtime: docker
@@ -22,15 +21,3 @@ services:
         value: postgres.nhesrzzxsedtzbqmguft
       - key: DB_PASSWORD
         value: Arifgoogle!?1
-
-  # Konfigurasi Frontend (React + Vite)
-  - type: web
-    name: websekolah-frontend
-    runtime: node
-    plan: free
-    rootDir: FrontEnd
-    buildCommand: "npm install && npm run build"
-    staticPublishPath: "dist"
-    envVars:
-      - key: NODE_VERSION
-        value: 20.11.0
