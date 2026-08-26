@@ -1,7 +1,7 @@
 services:
   - type: web
     name: websekolah-backend
-    env: php
+    env: native
     plan: free
     rootDir: BackEnd
     buildCommand: "composer install --no-dev --optimize-autoloader && php artisan config:cache && php artisan route:cache"
