@@ -109,6 +109,7 @@ class GuruController extends Controller
     }
 
     // ================= UPDATE =================
+    // ================= UPDATE =================
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
@@ -118,7 +119,7 @@ class GuruController extends Controller
             'mengajar' => 'required',
             'alamat' => 'required',
             'nohp' => 'required',
-            'foto' => 'nullable|image|max:10240' // Maks 10MB
+            'foto' => 'nullable|image|max:10240'
         ]);
 
         if ($validator->fails()) {
@@ -128,21 +129,33 @@ class GuruController extends Controller
             ], 422);
         }
 
-        $guru = Guru::findOrFail($id);
+        try {
+            $guru = Guru::findOrFail($id);
+            $uploadPath = public_path('uploads/Gambar_Guru');
 
-        if ($request->hasFile('foto')) {
-            try {
-                // hapus foto lama
+            if (!file_exists($uploadPath)) {
+                mkdir($uploadPath, 0777, true);
+            }
+
+            if ($request->hasFile('foto')) {
+                // Hapus foto lama di lokal jika ada
                 if ($guru->foto_guru) {
-                    $oldPath = public_path('uploads/Gambar_Guru/' . $guru->foto_guru);
-                    if (File::exists($oldPath)) File::delete($oldPath);
+                    $oldPath = $uploadPath . '/' . $guru->foto_guru;
+                    if (File::exists($oldPath)) {
+                        File::delete($oldPath);
+                    }
                 }
 
                 $file = $request->file('foto');
+                $fotoName = time() . '.' . $file->getClientOriginalExtension();
+                
+                // Jika ingin langsung simpan tanpa intervention image dulu untuk test amannya:
+                $file->move($uploadPath, $fotoName);
+                
+                // Atau jika pakai Intervention Image, pastikan library-nya aman:
+                /*
                 $fotoName = time() . '.webp';
-                $path = public_path('uploads/Gambar_Guru/' . $fotoName);
-
-                // Resize maksimal lebar 1200px, encode ke WebP 80%
+                $path = $uploadPath . '/' . $fotoName;
                 Image::make($file)
                     ->resize(1200, null, function ($constraint) {
                         $constraint->aspectRatio();
@@ -150,29 +163,31 @@ class GuruController extends Controller
                     })
                     ->encode('webp', 80)
                     ->save($path);
+                */
 
                 $guru->foto_guru = $fotoName;
-            } catch (\Exception $e) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Gagal update foto: ' . $e->getMessage()
-                ], 500);
             }
+
+            $guru->nuptk = $request->nuptk;
+            $guru->nama_guru = $request->nama;
+            $guru->tgll_guru = $request->tanggal_lahir;
+            $guru->mengajar = $request->mengajar;
+            $guru->alamat_guru = $request->alamat;
+            $guru->nohp_guru = $request->nohp;
+            $guru->save();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Data berhasil diupdate',
+                'data' => $guru
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Terjadi kesalahan server: ' . $e->getMessage()
+            ], 500);
         }
-
-        $guru->nuptk = $request->nuptk;
-        $guru->nama_guru = $request->nama;
-        $guru->tgll_guru = $request->tanggal_lahir;
-        $guru->mengajar = $request->mengajar;
-        $guru->alamat_guru = $request->alamat;
-        $guru->nohp_guru = $request->nohp;
-        $guru->save();
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Data berhasil diupdate',
-            'data' => $guru
-        ]);
     }
 
     // ================= DELETE =================
