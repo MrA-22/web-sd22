@@ -77,15 +77,11 @@ export const addGuruFormData = async (formData) => {
         return { status: "error", message: "Terjadi error koneksi ke server" };
     }
 };
+
 export const updateGuruFormData = async (id, formData) => {
     try {
-        // Pastikan _method PUT ikut dikirim jika backend Laravel Anda menuntut PUT/PATCH untuk update
-        if (!formData.has('_method')) {
-            formData.append('_method', 'PUT');
-        }
-
         const res = await fetch(`${BASE_URL}/guru/${id}`, {
-            method: "POST", // Laravel menerima POST untuk FormData dengan _method: PUT
+            method: "POST", // Murni POST sesuai route Laravel Anda
             body: formData,
         });
 
