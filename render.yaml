@@ -23,10 +23,14 @@ services:
       - key: DB_PASSWORD
         value: Arifgoogle!?1
 
-  # Konfigurasi Frontend (React + Vite Static Site)
-  - type: static
+  # Konfigurasi Frontend (React + Vite)
+  - type: web
     name: websekolah-frontend
+    runtime: node
     plan: free
     rootDir: FrontEnd
     buildCommand: "npm install && npm run build"
-    staticPublishPath: "./dist"
+    staticPublishPath: "dist"
+    envVars:
+      - key: NODE_VERSION
+        value: 20.11.0
