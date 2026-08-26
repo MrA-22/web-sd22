@@ -134,13 +134,36 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 3;
+
+  // Hitung total halaman
+  const totalPages = Math.ceil(artikel.length / itemsPerPage);
+
+  // Ambil artikel yang akan ditampilkan sesuai halaman aktif
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentArtikel = artikel.slice(indexOfFirstItem, indexOfLastItem);
+
+  // Fungsi navigasi halaman
+  const handleNext = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
   return (
     <div className="font-sans bg-gray-950 text-white min-h-screen">
       {/* HERO */}
       <div className="relative h-[70vh] md:h-[840px] overflow-hidden">
         {/* Background sekolah */}
         <div
-          className="absolute inset-0 w-full h-full bg-cover bg-center"
+          className="absolute inset-0 w-full h-full bg-contain bg-no-repeat bg-center"
           style={{ backgroundImage: `url(${backgrounds[currentBg]})` }}
         ></div>
 
@@ -170,107 +193,143 @@ export default function Home() {
           </motion.p>
 
           {/* 3. Slider gambar artikel (Swipe hanya untuk artikel) */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mt-3 w-full"
-          >
-            <div className="max-w-6xl mx-auto">
-              <Swiper
-                modules={[Autoplay]}
-                slidesPerView={3}
-                spaceBetween={10}
-                loop={true}
-
-                autoplay={{
-                  delay: 3000,
-                  disableOnInteraction: false
-                }}
-                breakpoints={{
-                  0: { slidesPerView: 1, spaceBetween: 5 },
-                  640: { slidesPerView: 1, spaceBetween: 10 },
-                  768: { slidesPerView: 2, spaceBetween: 10 },
-                  1024: { slidesPerView: 3, spaceBetween: 10 },
-                }}
-                className="w-full"
-              >
-                {artikel.map((a) => (
-                  <SwiperSlide key={a.id_artikel}>
-                    <div className="
-                      mx-auto 
-                      w-full 
-                      max-w-[240px] md:max-w-full   /* 🔥 ini kunci */
-                      rounded-xl 
-                      shadow-lg 
-                      border border-white/10 
-                      overflow-hidden
-                    ">
-                      <img
-                        src={a.foto_url || "https://via.placeholder.com/300"}
-                        alt={a.judul}
-                        onError={(e) => (e.target.src = "https://via.placeholder.com/300")}
-                        className="w-full aspect-[16/9] object-cover"
-                      />
-                    </div>
-                  </SwiperSlide>
-                ))}
-              </Swiper>
-              {/* Marquee Text */}
-              <div className="overflow-hidden whitespace-nowrap mt-4 w-full">
-                <motion.div
-                  key={currentTextIndex}
-                  animate={{ x: ["100%", "-100%"] }}
-                  transition={{ repeat: Infinity, duration: 10, ease: "linear" }}
-                  className="inline-block text-white text-lg font-semibold"
-                >
-                  {text}
-                </motion.div>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </div >
-      {/* CONTENT */}
-      <div className="p-6 grid grid-cols-2 md:grid-cols-3 gap-6 min-w-0">
-        {/* ARTIKEL */}
-        < motion.div
-          whileHover={{ scale: 1.01 }
-          }
-          className="col-span-1 md:col-span-2 bg-white/5 backdrop-blur-xl p-6 rounded-3xl border border-white/10"
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-3 w-full overflow-hidden"
         >
-          <h2 className="text-cyan-400 mb-4 uppercase text-sm">
+          <div className="max-w-2xl mx-auto px-4">
+            <Swiper
+              modules={[Autoplay]}
+              slidesPerView={3}
+              spaceBetween={10}
+              loop={true}
+              autoplay={{
+                delay: 3000,
+                disableOnInteraction: false
+              }}
+              breakpoints={{
+                0: { slidesPerView: 1, spaceBetween: 5 },
+                640: { slidesPerView: 1, spaceBetween: 10 },
+                768: { slidesPerView: 2, spaceBetween: 10 },
+                1024: { slidesPerView: 3, spaceBetween: 10 },
+              }}
+              className="w-full"
+            >
+              {artikel.map((a) => (
+                <SwiperSlide key={a.id_artikel}>
+                  <div className="
+                    mx-auto 
+                    w-full 
+                    max-w-[280px] sm:max-w-full   /* Disesuaikan agar pas di HP */
+                    rounded-xl 
+                    shadow-lg 
+                    border border-white/10 
+                    overflow-hidden
+                  ">
+                    <img
+                      src={a.foto_url || "https://via.placeholder.com/300"}
+                      alt={a.judul}
+                      className="w-full aspect-[16/9] object-cover"
+                      onError={(e) => (e.target.src = "https://via.placeholder.com/300")}
+                    />
+                  </div>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+            
+            {/* Marquee Text */}
+            <div className="overflow-hidden whitespace-nowrap mt-4 w-full">
+              <motion.div
+                key={currentTextIndex}
+                animate={{ x: ["100%", "-100%"] }}
+                transition={{ repeat: Infinity, duration: 10, ease: "linear" }}
+                className="inline-block text-white text-sm md:text-lg font-semibold"
+              >
+                {text}
+              </motion.div>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </div>
+
+      {/* CONTENT */}
+      {/* Ubah grid-cols-1 di HP agar section artikel memanjang penuh (1 kolom), lalu jadi 3 kolom saat di desktop (md) */}
+      <div className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-3 gap-6 min-w-0">
+        
+        {/* ARTIKEL */}
+        <motion.div
+          whileHover={{ scale: 1.01 }}
+          className="col-span-1 md:col-span-2 bg-white/5 backdrop-blur-xl p-4 md:p-6 rounded-3xl border border-white/10 overflow-hidden"
+        >
+          <h2 className="text-cyan-400 mb-4 uppercase text-sm font-semibold">
             Artikel Sekolah
           </h2>
+          
           {
-            artikel.length > 0 ? (
-              artikel.map((a) => (
-                <Link key={a.id_artikel} to={`/artikel/${a.id_artikel}`}>
-                  <div className="mb-6 bg-white/5 p-4 rounded-xl border border-white/10 flex flex-col md:flex-row items-start gap-4 hover:bg-white/10 transition cursor-pointer">
-                    {/* Gambar */}
-                    <div className="w-full md:w-1/3 overflow-hidden rounded-lg">
-                      <img
-                        src={a.foto_url || "https://via.placeholder.com/300"}
-                        alt={a.judul}
-                        className="w-full aspect-[16/9] object-cover rounded-lg"
-                        onError={(e) => (e.target.src = "https://via.placeholder.com/300")}
-                      />
-                    </div>
+            currentArtikel.length > 0 ? (
+              <>
+                {currentArtikel.map((a) => (
+                  <Link key={a.id_artikel} to={`/artikel/${a.id_artikel}`}>
+                    <div className="mb-4 md:mb-6 bg-white/5 p-3 md:p-4 rounded-xl border border-white/10 flex flex-col sm:flex-row items-start gap-4 hover:bg-white/10 transition cursor-pointer">
+                      {/* Gambar */}
+                      <div className="w-full sm:w-1/3 overflow-hidden rounded-lg">
+                        <img
+                          src={a.foto_url || "https://via.placeholder.com/300"}
+                          alt={a.judul}
+                          className="w-full aspect-[16/9] object-cover rounded-lg"
+                          onError={(e) => (e.target.src = "https://via.placeholder.com/300")}
+                        />
+                      </div>
 
-                    {/* Teks */}
-                    <div className="w-full md:w-2/3 flex flex-col">
-                      <h3 className="font-bold mb-2">{a.judul}</h3>
-                      <p className="text-gray-400">{a.isi.substring(0, 200)}...</p>
+                      {/* Teks */}
+                      <div className="w-full sm:w-2/3 flex flex-col min-w-0">
+                        <h3 className="font-bold mb-1 md:mb-2 text-sm md:text-base truncate">{a.judul}</h3>
+                        <p className="text-gray-400 text-xs md:text-sm line-clamp-2">{a.isi.substring(0, 100)}...</p>
+                      </div>
                     </div>
-                  </div>
-                </Link>
-              ))
+                  </Link>
+                ))}
+
+                {/* PAGINATION / TOMBOL NAVIGASI */}
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-6 pt-4 border-t border-white/10 text-xs md:text-sm">
+                  <button
+                    onClick={handlePrev}
+                    disabled={currentPage === 1}
+                    className={`w-full sm:w-auto px-4 py-2 rounded-lg border transition ${
+                      currentPage === 1
+                        ? "border-white/10 text-gray-600 cursor-not-allowed"
+                        : "border-white/20 text-white hover:border-cyan-400 hover:text-cyan-400"
+                    }`}
+                  >
+                    ← Previous
+                  </button>
+
+                  <span className="text-gray-400 text-center">
+                    Hal {currentPage} dari {totalPages || 1}
+                  </span>
+
+                  <button
+                    onClick={handleNext}
+                    disabled={currentPage >= totalPages}
+                    className={`w-full sm:w-auto px-4 py-2 rounded-lg border transition ${
+                      currentPage >= totalPages
+                        ? "border-white/10 text-gray-600 cursor-not-allowed"
+                        : "border-white/20 text-white hover:border-cyan-400 hover:text-cyan-400"
+                    }`}
+                  >
+                    Next →
+                  </button>
+                </div>
+              </>
             ) : (
-              <div className="bg-white/5 p-4 rounded-xl border border-white/10 text-gray-300">
+              <div className="bg-white/5 p-4 rounded-xl border border-white/10 text-gray-300 text-sm">
                 Tidak ada artikel untuk ditampilkan
               </div>
             )
           }
-        </motion.div >
+        </motion.div>
 
         {/* SIDEBAR GURU */}
         <motion.div
@@ -282,7 +341,7 @@ export default function Home() {
           <div className="max-w-6xl mx-auto">
             <Swiper
               modules={[Autoplay]}
-              slidesPerView={3}       // default desktop
+              slidesPerView={3}       
               spaceBetween={10}
               loop={true}
               autoplay={{
@@ -340,7 +399,10 @@ export default function Home() {
               Total Guru aktif saat ini
             </p>
           </motion.div>
-          {/* CHART JUMLAH SISWA */}
+        </motion.div>
+      </div>
+      <div className="p-6 min-w-0">
+      {/* CHART JUMLAH SISWA */}
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -368,45 +430,37 @@ export default function Home() {
               </select>
             </div>
 
-            {/* CHART */}
-            <div className="w-full min-w-0 h-[300px] flex">
-              <div className="flex-1">
-                {ready && filteredData.length > 0 && (
-                  <ResponsiveContainer width="100%" height="100%" minHeight={200}>
-                    <BarChart data={filteredData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
-
-                      <defs>
-                        <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#22d3ee" />
-                          <stop offset="100%" stopColor="#a855f7" />
-                        </linearGradient>
-                      </defs>
-
-                      <XAxis dataKey="kelas" stroke="#ccc" />
-                      <YAxis stroke="#ccc" />
-
-                      <Tooltip
-                        contentStyle={{
-                          background: "#111",
-                          border: "none",
-                          borderRadius: "10px"
-                        }}
-                      />
-
-                      <Bar
-                        dataKey="total"
-                        fill="url(#colorUv)"
-                        radius={[10, 10, 0, 0]}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                )}
-              </div>
+            <div className="w-full h-[300px]">
+              {ready && filteredData.length > 0 && (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={filteredData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
+                    <defs>
+                      <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#22d3ee" />
+                        <stop offset="100%" stopColor="#a855f7" />
+                      </linearGradient>
+                    </defs>
+                    <XAxis dataKey="kelas" stroke="#ccc" />
+                    <YAxis stroke="#ccc" />
+                    <Tooltip
+                      contentStyle={{
+                        background: "#111",
+                        border: "none",
+                        borderRadius: "10px"
+                      }}
+                    />
+                    <Bar
+                      dataKey="total"
+                      fill="url(#colorUv)"
+                      radius={[10, 10, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </motion.div>
-
-          {/* MAP */}
+      {/* MAP */}
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -424,8 +478,7 @@ export default function Home() {
               ></iframe>
             </div>
           </motion.div>
-        </motion.div>
-      </div>
-    </div >
+    </div>
+    </div>
   );
 }

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
 import { getSiswa, rekapNilai } from "../api/api"
 
@@ -8,17 +9,21 @@ export default function OrangTua() {
   const [rataRata, setRataRata] = useState(0)
   const [loading, setLoading] = useState(true)
   const [mouse, setMouse] = useState({ x: 0, y: 0 })
+  const navigate = useNavigate()
 
-  // ================= FETCH SISWA =================
+  // ================= PROTEKSI & FETCH SISWA =================
   useEffect(() => {
     const data = localStorage.getItem("siswa")
 
-    if (data) {
-      setSiswa(JSON.parse(data))
+    if (!data) {
+      // Jika tidak ada data sesi login, lempar kembali ke halaman login
+      navigate("/login-orangtua", { replace: true })
+      return
     }
 
+    setSiswa(JSON.parse(data))
     setLoading(false)
-  }, [])
+  }, [navigate])
   
   // ================= FETCH NILAI =================
   useEffect(() => {
@@ -96,7 +101,7 @@ export default function OrangTua() {
         animate={{ opacity: 1, y: 0 }}
         className="text-center mb-12"
       >
-        <h1 className="text-3xl md:text-4xl font-semibold">
+        <h1 className="text-3xl mt-12 md:text-4xl font-semibold">
           Dashboard Orang Tua
         </h1>
         <div className="w-16 h-1 bg-cyan-400 mx-auto mt-3 rounded-full" />
@@ -143,7 +148,7 @@ export default function OrangTua() {
                 </p>
 
                 <div className="mt-2 text-sm text-gray-300 space-y-1">
-                  <p>Kelas: {siswa.kelas?.nama_kelas}</p>
+                  <p>Kelas: {siswa.kelas?.nama_kelas || siswa.id_kelas?.nama_kelas || "Tidak ada kelas"}</p>
                   <p>Alamat: {siswa.alamat}</p>
                   <p>No HP Ortu: {siswa.nohp_ortu}</p>
                 </div>

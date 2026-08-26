@@ -22,10 +22,26 @@ export default function Footer() {
   useEffect(() => {
     getIdentitas()
       .then(res => {
-        if (res) setIdentitas(res);
+        const rawData = res?.data || res;
+        const data = Array.isArray(rawData) ? rawData[0] : rawData;
+        if (data) {
+          setIdentitas({
+            nama_sekolah: data.nama_sekolah || "",
+            alamat_sekolah: data.alamat_sekolah || data.alamat || "",
+            email: data.email || "",
+            noponsel: data.noponsel || data.telepon || data.no_telp || "",
+          });
+        }
       })
       .catch(() => {});
   }, []);
+
+  // ================= FORMAT WA =================
+  const formatPhone = (phone) => {
+    if (!phone) return "";
+    const str = String(phone);
+    return str.startsWith("0") ? "62" + str.slice(1) : str;
+  };
 
   return (
     <>
@@ -48,14 +64,13 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* MIDDLE (GANTI MENU) */}
+          {/* MIDDLE */}
           <div>
             <h2 className="text-white font-semibold mb-4">
               Informasi Kontak
             </h2>
 
             <div className="space-y-3 text-sm">
-
               <div className="flex items-center gap-3">
                 <FaMapMarkerAlt className="text-cyan-400" />
                 <span>{identitas.alamat_sekolah || "-"}</span>
@@ -70,7 +85,6 @@ export default function Footer() {
                 <FaPhone className="text-green-400" />
                 <span>{identitas.noponsel || "-"}</span>
               </div>
-
             </div>
           </div>
 
@@ -90,7 +104,18 @@ export default function Footer() {
               <a href="#" className="hover:text-sky-400 transition">
                 <FaTwitter />
               </a>
-              <a href="#" className="hover:text-green-400 transition">
+              
+              {/* PERBAIKAN LINK WHATSAPP */}
+              <a
+                href={
+                  identitas.noponsel
+                    ? `https://wa.me/${formatPhone(identitas.noponsel)}`
+                    : "#"
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-green-400 transition"
+              >
                 <FaWhatsapp />
               </a>
             </div>

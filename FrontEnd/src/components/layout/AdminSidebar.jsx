@@ -9,7 +9,8 @@ import {
   HiOutlineBookOpen,
   HiOutlineCalendar,
   HiOutlineChartBar,
-  HiOutlineLogout
+  HiOutlineLogout,
+  HiOutlineNewspaper
 } from "react-icons/hi"
 
 export default function AdminSidebar() {
@@ -19,7 +20,6 @@ export default function AdminSidebar() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  // 🔥 AMBIL DATA LOGIN
   const role = localStorage.getItem("role")
   const user = JSON.parse(localStorage.getItem("user"))
 
@@ -123,6 +123,7 @@ export default function AdminSidebar() {
 
               {menuItem("Jadwal", <HiOutlineCalendar />, "/jadwalpanel")}
               {menuItem("Nilai", <HiOutlineChartBar />, "/nilaipanel")}
+              {menuItem("Artikel", <HiOutlineNewspaper />, "/artikelpanel")}
             </>
           )}
 
@@ -180,6 +181,7 @@ export default function AdminSidebar() {
               {menuItem("Siswa", <HiOutlineUserGroup />, "/siswapanel")}
               {menuItem("Jadwal", <HiOutlineCalendar />, "/jadwalpanel")}
               {menuItem("Nilai", <HiOutlineChartBar />, "/nilaipanel")}
+              {menuItem("Artikel", <HiOutlineNewspaper />, "/artikelpanel")}
             </>
           )}
 

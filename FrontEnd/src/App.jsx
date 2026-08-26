@@ -26,6 +26,7 @@ import LoginOrangTua from "./pages/LoginOrangTua"
 import OrangTua from "./pages/OrangTua"
 import LoginAdmin from "./pages/LoginAdmin"
 import DetailArtikel from "./pages/DetailArtikel"
+import UbahArtikel from "./admin/UbahArtikel"
 
 export default function App() {
   const location = useLocation()
@@ -47,6 +48,7 @@ export default function App() {
     "/artikelpanel",
     "/addnilai",
     "/addartikel",
+    "/ubahartikel",
   ]
 
   const hideNavbar = hideNavbarRoutes.some(route =>
@@ -84,6 +86,7 @@ export default function App() {
         <Route path="/orangtua" element={<OrangTua />} />
         <Route path="/loginadmin" element={<LoginAdmin />} />
         <Route path="/artikel/:id" element={<DetailArtikel />} />
+        <Route path="/ubahartikel/:id" element={<UbahArtikel />} />
       </Routes>
 
       {/* Footer juga bisa disembunyikan kalau mau */}

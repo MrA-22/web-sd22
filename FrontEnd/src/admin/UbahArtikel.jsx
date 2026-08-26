@@ -3,10 +3,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import AdminSidebar from "../components/layout/AdminSidebar";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { getSiswaById, updateSiswaFormData, getFotoSiswaUrl } from "../api/api";
+import { getArtikelById, updateArtikel } from "../api/api";
 import AdminLayout from "../components/layout/AdminLayout";
 
-export default function UbahSiswa() {
+export default function UbahArtikel() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
@@ -14,12 +14,10 @@ export default function UbahSiswa() {
 
   const [mouse, setMouse] = useState({ x: 0, y: 0 });
   const [form, setForm] = useState({
-    nisn: "",
-    nama: "",
-    tanggal_lahir: null,
-    id_kelas: "",
-    alamat: "",
-    nohp: "",
+    judul: "",
+    penulis: "",
+    tanggal_upload: null,
+    isi: "",
     foto: null,
     preview: null
   });
@@ -31,30 +29,29 @@ export default function UbahSiswa() {
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
-  // LOAD DATA SISWA
+  // LOAD DATA ARTIKEL
   useEffect(() => {
-    getSiswaById(id)
-      .then(data => {
+    getArtikelById(id)
+      .then(res => {
+        const data = res.data || res;
         setForm({
-          nisn: data.nisn || "",
-          nama: data.nama_siswa || "",
-          tanggal_lahir: data.tgll_siswa ? new Date(data.tgll_siswa) : null,
-          id_kelas: data.id_kelas || "",
-          alamat: data.alamat || "",
-          nohp: data.nohp_ortu || "",
+          judul: data.judul || "",
+          penulis: data.penulis || "",
+          tanggal_upload: data.tanggal_upload ? new Date(data.tanggal_upload) : new Date(),
+          isi: data.isi || "",
           foto: null,
-          preview: data.foto_siswa ? getFotoSiswaUrl(data.foto_siswa) : null
+          preview: data.foto_url || data.foto || null
         });
       })
       .catch(err => {
         console.error(err);
-        setModalMessage("Gagal memuat data siswa");
+        setModalMessage("Gagal memuat data artikel");
         setShowModal(true);
       });
   }, [id]);
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
-
+  
   const handleFoto = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -66,32 +63,27 @@ export default function UbahSiswa() {
   const handleSubmit = async () => {
     try {
       const formData = new FormData();
-      formData.append("nisn", form.nisn);
-      formData.append("nama", form.nama);
-      formData.append("alamat", form.alamat);
-      formData.append("nohp", form.nohp);
-      formData.append("id_kelas", form.id_kelas);
-      
-      if (form.tanggal_lahir) {
-        formData.append(
-          "tanggal_lahir",
-          form.tanggal_lahir.toISOString().split("T")[0]
-        );
-      }
-      
-      if (form.foto) {
-        formData.append("foto", form.foto);
-      }
+      formData.append("judul", form.judul);
+      formData.append("penulis", form.penulis);
+      formData.append(
+        "tanggal_upload", 
+        form.tanggal_upload instanceof Date 
+          ? form.tanggal_upload.toISOString().split("T")[0] 
+          : form.tanggal_upload
+      );
+      formData.append("isi", form.isi);
+      if (form.foto) formData.append("foto", form.foto);
 
-      const data = await updateSiswaFormData(id, formData);
+      // Pastikan fungsi API update artikel Anda sesuai (misal: updateArtikelFormData atau updateArtikel)
+      const data = await updateArtikelFormData(id, formData);
 
       if (data.status === "success") {
-        setModalMessage("Data siswa berhasil diubah!");
+        setModalMessage("Data artikel berhasil diubah!");
       } else if (data.errors) {
-        const messages = Object.values(data.errors).flat().join("\n");
+        const messages = Object.values(data.errors).flat().join(", ");
         setModalMessage(messages);
       } else {
-        setModalMessage(data.message || "Gagal update data");
+        setModalMessage(data.message || "Gagal update data artikel");
       }
 
       setShowModal(true);
@@ -115,7 +107,7 @@ export default function UbahSiswa() {
 
           {/* TITLE */}
           <h1 className="text-4xl font-bold text-center mb-2 bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-            Ubah Siswa
+            Ubah Artikel
           </h1>
 
           {/* FORM CARD */}
@@ -136,15 +128,15 @@ export default function UbahSiswa() {
                 />
               </div>
 
-              <Input name="nisn" value={form.nisn} onChange={handleChange} placeholder="NISN" />
-              <Input name="nama" value={form.nama} onChange={handleChange} placeholder="Nama Siswa" />
+              <Input name="judul" value={form.judul} onChange={handleChange} placeholder="Judul Artikel" full />
+              <Input name="penulis" value={form.penulis} onChange={handleChange} placeholder="Penulis" />
 
               {/* DATE PICKER */}
               <div className="flex flex-col">
-                <label className="mb-1 text-gray-400 text-sm font-medium">Tanggal Lahir</label>
+                <label className="mb-1 text-gray-400 text-sm font-medium">Tanggal Upload</label>
                 <DatePicker
-                  selected={form.tanggal_lahir}
-                  onChange={(date) => setForm({ ...form, tanggal_lahir: date })}
+                  selected={form.tanggal_upload}
+                  onChange={(date) => setForm({ ...form, tanggal_upload: date })}
                   dateFormat="dd/MM/yyyy"
                   className="w-full p-3 rounded-xl bg-black/60 border border-white/10 text-white
                              focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 outline-none transition"
@@ -152,9 +144,8 @@ export default function UbahSiswa() {
                 />
               </div>
 
-              <Input name="id_kelas" value={form.id_kelas} onChange={handleChange} placeholder="Kelas" />
-              <InputAlamat name="alamat" value={form.alamat} onChange={handleChange} placeholder="Alamat" full />
-              <InputNoHP name="nohp" value={form.nohp} onChange={handleChange} placeholder="No HP Orang Tua" full />
+              {/* ISI ARTIKEL */}
+              <InputArea name="isi" value={form.isi} onChange={handleChange} placeholder="Isi Artikel" full />
             </div>
 
             {/* BUTTONS */}
@@ -177,13 +168,11 @@ export default function UbahSiswa() {
             {showModal && (
               <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
                 <div className="bg-black/90 p-6 rounded-xl border border-white/20 shadow-lg w-80 text-center">
-                  <p className="mb-4 text-white whitespace-pre-line">{modalMessage}</p>
+                  <p className="mb-4 text-white">{modalMessage}</p>
                   <button
                     onClick={() => {
                       setShowModal(false);
-                      if (modalMessage.includes("berhasil")) {
-                        navigate("/siswapanel");
-                      }
+                      navigate("/artikelpanel"); // Sesuaikan route panel artikel Anda jika berbeda
                     }}
                     className="px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-600 transition text-black font-semibold"
                   >
@@ -210,73 +199,25 @@ function Input({ name, value, onChange, placeholder, full }) {
         onChange={onChange}
         placeholder={placeholder}
         className="w-full p-3 rounded-xl bg-black/60 border border-white/10
-                    focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 outline-none
-                    transition placeholder-gray-400 text-white"
+                   focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 outline-none
+                   transition placeholder-gray-400 text-white"
       />
     </div>
   );
 }
 
-function InputNoHP({ name, value, onChange, placeholder, full, maxLength = 14 }) {
-  const [error, setError] = useState("");
-
-  const handleFocus = () => {
-    if (!value || value === "") onChange({ target: { name, value: "+62" } });
-  };
-
-  const handleChange = (e) => {
-    let val = e.target.value;
-    val = val.replace(/[^\d+]/g, "");
-
-    if (!val.startsWith("+62")) {
-      val = val.replace(/^0+/, "");
-      val = "+62" + val;
-    }
-
-    if (val.length > maxLength) val = val.slice(0, maxLength);
-    if (val.length > maxLength) setError(`Maksimal ${maxLength} karakter`);
-    else setError("");
-
-    onChange({ target: { name, value: val } });
-  };
-
+function InputArea({ name, value, onChange, placeholder, full }) {
   return (
     <div className={`${full ? "col-span-2" : ""} flex flex-col`}>
       <label className="mb-1 text-gray-400 text-sm font-medium">{placeholder}</label>
-      <input
-        type="tel"
+      <textarea
         name={name}
         value={value}
-        onFocus={handleFocus}
-        onChange={handleChange}
-        placeholder={placeholder}
-        className="w-full p-3 rounded-xl bg-black/60 border border-white/10
-                    focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 outline-none
-                    transition placeholder-gray-400 text-white"
-      />
-      {error && <span className="text-red-400 text-xs mt-1">{error}</span>}
-    </div>
-  );
-}
-
-function InputAlamat({ name, value, onChange, placeholder, full }) {
-  const handleFocus = () => {
-    if (!value || value === "") onChange({ target: { name, value: "Jln. " } });
-  };
-
-  return (
-    <div className={`${full ? "col-span-2" : ""} flex flex-col`}>
-      <label className="mb-1 text-gray-400 text-sm font-medium">{placeholder}</label>
-      <input
-        type="text"
-        name={name}
-        value={value}
-        onFocus={handleFocus}
         onChange={onChange}
         placeholder={placeholder}
         className="w-full p-3 rounded-xl bg-black/60 border border-white/10
-                    focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 outline-none
-                    transition placeholder-gray-400 text-white"
+                   focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 outline-none
+                   transition placeholder-gray-400 text-white h-32 resize-y"
       />
     </div>
   );

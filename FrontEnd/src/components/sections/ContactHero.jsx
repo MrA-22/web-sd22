@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import emailjs from "@emailjs/browser";
 import { motion } from "framer-motion";
-import { getIdentitas } from "../../api/api";
 
 export default function ContactHero() {
   // ================= STATE =================
@@ -17,8 +16,6 @@ export default function ContactHero() {
     telepon: "",
   });
 
-  const [loading, setLoading] = useState(true);
-
   // ================= HANDLE INPUT =================
   const handleChange = (e) => {
     setForm({
@@ -28,29 +25,7 @@ export default function ContactHero() {
   };
 
   // ================= FETCH API =================
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await getIdentitas();
 
-        if (res) {
-          setIdentitas({
-            email: res.email || "",
-            alamat: res.alamat_sekolah || "",
-            telepon: res.noponsel || "",
-          });
-        } else {
-          console.error("Data kosong dari API");
-        }
-      } catch (err) {
-        console.error("Gagal ambil identitas:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
 
   // ================= SUBMIT =================
   const handleSubmit = (e) => {
@@ -95,7 +70,7 @@ export default function ContactHero() {
 
   // ================= UI =================
   return (
-    <div className="min-h-screen bg-gray-950 text-white p-6 pt-24">
+    <div className=" bg-gray-950 text-white p-6 pt-24">
 
       {/* HEADER */}
       <div className="max-w-6xl mx-auto mb-10">
@@ -111,62 +86,6 @@ export default function ContactHero() {
       {/* GRID */}
       <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-6">
 
-        {/* LEFT */}
-        <motion.div
-          whileHover={{ scale: 1.01 }}
-          className="bg-white/5 backdrop-blur-xl p-6 rounded-3xl border border-white/10 space-y-4"
-        >
-          <h2 className="text-cyan-400 uppercase text-sm">
-            Informasi Kontak
-          </h2>
-
-          <div className="space-y-2 text-gray-300">
-            <p>
-              <span className="text-gray-400">Email:</span>{" "}
-              {loading ? "Loading..." : identitas.email}
-            </p>
-
-            <p>
-              <span className="text-gray-400">Lokasi:</span>{" "}
-              {loading ? "Loading..." : identitas.alamat}
-            </p>
-
-            <p>
-              <span className="text-gray-400">Telepon:</span>{" "}
-              {loading ? "Loading..." : identitas.telepon}
-            </p>
-          </div>
-
-          {/* SOSIAL */}
-          <div className="flex flex-wrap gap-3 pt-3">
-            <a
-              href={
-                identitas.telepon
-                  ? `https://wa.me/${formatPhone(identitas.telepon)}`
-                  : "#"
-              }
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg hover:border-cyan-400 transition text-sm"
-            >
-              WhatsApp
-            </a>
-
-            <a
-              href="#"
-              className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg hover:border-cyan-400 transition text-sm"
-            >
-              Facebook
-            </a>
-
-            <a
-              href="#"
-              className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg hover:border-cyan-400 transition text-sm"
-            >
-              Instagram
-            </a>
-          </div>
-        </motion.div>
 
         {/* RIGHT */}
         <motion.div

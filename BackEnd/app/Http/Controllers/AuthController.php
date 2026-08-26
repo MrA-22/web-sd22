@@ -52,11 +52,11 @@ class AuthController extends Controller
         }
 
         // ================= LOGIN SISWA =================
-        $siswa = Siswa::where('nisn', $username)->first();
+        // Tambahkan with('kelas') di sini
+        $siswa = Siswa::with('kelas')->where('nisn', $username)->first();
 
         if ($siswa) {
 
-            // ✅ TAMBAHKAN INI
             $siswa->foto_url = $siswa->foto_siswa
                 ? url('/uploads/Gambar_Siswa/' . $siswa->foto_siswa)
                 : null;

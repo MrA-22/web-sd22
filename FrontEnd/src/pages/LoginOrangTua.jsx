@@ -19,11 +19,16 @@ export default function LoginOrangTua() {
             password: ""
         })
 
-        if (res.status === "success" && res.role === "siswa") {
+        // 👀 Cek lewat F12 Console browser, apa isi asli dari res ini?
+        console.log("RESPONSE LOGIN:", res);
+
+        // Terkadang struktur dari backend tidak persis "res.status === 'success'", 
+        // melainkan hanya mengecek apakah datanya ada.
+        if (res && res.data) {
             localStorage.setItem("siswa", JSON.stringify(res.data))
-            navigate("/orangtua")
+            navigate("/orangtua", { replace: true })
         } else {
-            setError("NISN tidak ditemukan")
+            setError(res.message || "NISN tidak ditemukan")
         }
     }
 

@@ -30,7 +30,14 @@ export default function Navbar() {
 
   const handleNav = (path) => {
     setIsOpen(false);
-    if (location.pathname !== path) navigate(path);
+    if (location.pathname !== path) {
+      // Jika kembali ke Home (atau halaman utama), gunakan replace agar history tertimpa
+      if (path === "/") {
+        navigate(path, { replace: true });
+      } else {
+        navigate(path);
+      }
+    }
   };
 
   const isActive = (path) => location.pathname === path;
