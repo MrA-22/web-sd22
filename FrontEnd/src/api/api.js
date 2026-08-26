@@ -80,8 +80,10 @@ export const addGuruFormData = async (formData) => {
 
 export const updateGuruFormData = async (id, formData) => {
     try {
+        // Pastikan kita menggunakan POST (sesuai route Laravel Anda) 
+        // dan biarkan browser mengatur boundary FormData secara otomatis (jangan set Content-Type manual)
         const res = await fetch(`${BASE_URL}/guru/${id}`, {
-            method: "POST", // Murni POST sesuai route Laravel Anda
+            method: "POST",
             body: formData,
         });
 
@@ -91,9 +93,11 @@ export const updateGuruFormData = async (id, formData) => {
         try {
             return JSON.parse(text);
         } catch {
+            console.error("Bukan JSON:", text);
             return { status: "error", message: "Gagal memproses response server (Bukan JSON)" };
         }
     } catch (err) {
+        console.error("Fetch error:", err);
         return { status: "error", message: err.message };
     }
 };

@@ -146,7 +146,7 @@ class GuruController extends Controller
     // ================= UPDATE =================
     public function update(Request $request, $id)
     {
-        $validator = Validator::make($request->all(), [
+        $validator = Validator::make(parameter: $request->all(), rules: [
             'nuptk' => 'required',
             'nama' => 'required',
             'tanggal_lahir' => 'required|date',
