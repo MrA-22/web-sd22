@@ -11,7 +11,7 @@ use Intervention\Image\ImageManagerStatic as Image;
 class GuruController extends Controller
 {
     // Helper untuk upload ke Supabase Storage via HTTP REST API
-   private function uploadToSupabase($file, $filename)
+    private function uploadToSupabase($file, $filename)
     {
         $supabaseUrl = env('SUPABASE_URL');
         $serviceRoleKey = env('SUPABASE_SERVICE_ROLE_KEY');
@@ -53,7 +53,6 @@ class GuruController extends Controller
     {
         if (!$filename) return null;
         $supabaseUrl = env('SUPABASE_URL');
-        // Pastikan bucket di Supabase Anda sudah di-set ke PUBLIC agar bisa diakses langsung
         return "{$supabaseUrl}/storage/v1/object/public/uploads/Gambar_Guru/{$filename}";
     }
 
@@ -144,7 +143,6 @@ class GuruController extends Controller
     }
 
     // ================= UPDATE =================
-    // ================= UPDATE =================
     public function update(Request $request, $id)
     {
         try {
@@ -202,7 +200,6 @@ class GuruController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            // Ini akan menangkap error PHP/Library apa pun dan menampilkannya dalam bentuk JSON
             return response()->json([
                 'status' => 'error',
                 'message' => 'Terjadi kesalahan server: ' . $e->getMessage(),
@@ -218,12 +215,12 @@ class GuruController extends Controller
         try {
             $guru = Guru::findOrFail($id);
 
-            // Hapus relasi jadwal jika ada
-            if (method_exists($guru, 'jadwal') && $guru->jadwal()) {
+            // Perbaikan pengecekan dan penghapusan relasi jadwal secara aman
+            if (method_exists($guru, 'jadwal')) {
                 $guru->jadwal()->delete();
             }
 
-            // Hapus foto di Supabase Storage
+            // Hapus foto di Supabase Storage jika ada
             if ($guru->foto_guru) {
                 $this->deleteFromSupabase($guru->foto_guru);
             }
@@ -237,7 +234,9 @@ class GuruController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => $e->getMessage()
+                'message' => 'Gagal menghapus data: ' . $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
             ], 500);
         }
     }
