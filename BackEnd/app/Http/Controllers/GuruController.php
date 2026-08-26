@@ -11,28 +11,28 @@ use Intervention\Image\ImageManagerStatic as Image;
 class GuruController extends Controller
 {
     // Helper untuk upload ke Supabase Storage via HTTP REST API
-    private function uploadToSupabase($file, $filename)
+   private function uploadToSupabase($file, $filename)
     {
         $supabaseUrl = env('SUPABASE_URL');
         $serviceRoleKey = env('SUPABASE_SERVICE_ROLE_KEY');
 
-        // Render gambar ke WebP menggunakan Intervention Image di memory
-        $img = Image::make($file)
-            ->resize(1200, null, function ($constraint) {
-                $constraint->aspectRatio();
-                $constraint->upsize();
-            })
-            ->encode('webp', 80);
+        $fileContent = file_get_contents($file->getRealPath());
+        $mimeType = $file->getMimeType();
 
         $response = Http::withHeaders([
             'apikey' => $serviceRoleKey,
             'Authorization' => 'Bearer ' . $serviceRoleKey,
-            'Content-Type' => 'image/webp',
-            'x-upsert' => 'true' // Timpa jika nama file sama
-        ])->withBody($img->__toString(), 'image/webp')
+            'Content-Type' => $mimeType,
+            'x-upsert' => 'true'
+        ])->withBody($fileContent, $mimeType)
           ->post("{$supabaseUrl}/storage/v1/object/uploads/Gambar_Guru/{$filename}");
 
-        return $response->successful();
+        // Jika gagal, lempar exception beserta pesan dari Supabase
+        if (!$response->successful()) {
+            throw new \Exception('Supabase Error: ' . $response->body());
+        }
+
+        return true;
     }
 
     // Helper untuk hapus file dari Supabase Storage
