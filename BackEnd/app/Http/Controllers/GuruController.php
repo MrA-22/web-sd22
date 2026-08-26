@@ -4,21 +4,66 @@ namespace App\Http\Controllers;
 
 use App\Models\Guru;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use Intervention\Image\ImageManagerStatic as Image;
 
 class GuruController extends Controller
 {
+    // Helper untuk mendapatkan Public URL dari Supabase Storage
+    private function getSupabaseFileUrl($filename)
+    {
+        if (!$filename) return null;
+        $supabaseUrl = env('SUPABASE_URL');
+        return "{$supabaseUrl}/storage/v1/object/public/uploads/Gambar_Guru/{$filename}";
+    }
+
+    // Helper untuk upload ke Supabase Storage via HTTP REST API
+    private function uploadToSupabase($file, $filename)
+    {
+        $supabaseUrl = env('SUPABASE_URL');
+        $serviceRoleKey = env('SUPABASE_SERVICE_ROLE_KEY');
+
+        // Render gambar ke WebP menggunakan Intervention Image terlebih dahulu di memory
+        $img = Image::make($file)
+            ->resize(1200, null, function ($constraint) {
+                $constraint->aspectRatio();
+                $constraint->upsize();
+            })
+            ->encode('webp', 80);
+
+        $response = Http::withHeaders([
+            'apikey' => $serviceRoleKey,
+            'Authorization' => 'Bearer ' . $serviceRoleKey,
+            'Content-Type' => 'image/webp',
+            'x-upsert' => 'true' // Timpa jika nama file sama
+        ])->withBody($img->__toString(), 'image/webp')
+          ->post("{$supabaseUrl}/storage/v1/object/uploads/Gambar_Guru/{$filename}");
+
+        return $response->successful();
+    }
+
+    // Helper untuk hapus file dari Supabase Storage
+    private function deleteFromSupabase($filename)
+    {
+        if (!$filename) return;
+        $supabaseUrl = env('SUPABASE_URL');
+        $serviceRoleKey = env('SUPABASE_SERVICE_ROLE_KEY');
+
+        Http::withHeaders([
+            'apikey' => $serviceRoleKey,
+            'Authorization' => 'Bearer ' . $serviceRoleKey,
+        ])->delete("{$supabaseUrl}/storage/v1/object/uploads/Gambar_Guru/{$filename}");
+    }
+
     // ================= GET ALL =================
     public function index()
     {
         $data = Guru::all();
 
         foreach ($data as $d) {
-            $d->foto_url = $d->foto_guru
-                ? url('/uploads/Gambar_Guru/' . $d->foto_guru)
-                : null;
+            $d->foto_url = $this->getSupabaseFileUrl($d->foto_guru);
         }
 
         return response()->json($data);
@@ -36,12 +81,11 @@ class GuruController extends Controller
             ], 404);
         }
 
-        $guru->foto_url = $guru->foto_guru
-            ? url('/uploads/Gambar_Guru/' . $guru->foto_guru)
-            : null;
+        $guru->foto_url = $this->getSupabaseFileUrl($guru->foto_guru);
 
         return response()->json($guru);
     }
+
     // ================= STORE =================
     public function store(Request $request)
     {
@@ -52,8 +96,7 @@ class GuruController extends Controller
             'mengajar' => 'required',
             'alamat' => 'required',
             'nohp' => 'required',
-            // Maks 10MB sekarang
-            'foto' => 'nullable|image|max:10240' // 10240 KB = 10MB
+            'foto' => 'nullable|image|max:10240'
         ]);
 
         if ($validator->fails()) {
@@ -64,24 +107,16 @@ class GuruController extends Controller
         }
 
         $fotoName = null;
-        $uploadPath = public_path('uploads/Gambar_Guru');
-        if (!file_exists($uploadPath)) mkdir($uploadPath, 0777, true);
 
-        // 🔥 UPLOAD + COMPRESS + WEBP
         if ($request->hasFile('foto')) {
             try {
                 $file = $request->file('foto');
                 $fotoName = time() . '.webp';
-                $path = $uploadPath . '/' . $fotoName;
 
-                // Resize maksimal lebar 1200px, kompres jadi WebP 80%
-                Image::make($file)
-                    ->resize(1200, null, function ($constraint) {
-                        $constraint->aspectRatio();
-                        $constraint->upsize();
-                    })
-                    ->encode('webp', 80)
-                    ->save($path);
+                $uploaded = $this->uploadToSupabase($file, $fotoName);
+                if (!$uploaded) {
+                    throw new \Exception('Gagal mengunggah file ke Supabase Storage');
+                }
             } catch (\Exception $e) {
                 return response()->json([
                     'status' => 'error',
@@ -118,7 +153,7 @@ class GuruController extends Controller
             'mengajar' => 'required',
             'alamat' => 'required',
             'nohp' => 'required',
-            'foto' => 'nullable|image|max:10240' // Maks 10MB
+            'foto' => 'nullable|image|max:10240'
         ]);
 
         if ($validator->fails()) {
@@ -132,24 +167,18 @@ class GuruController extends Controller
 
         if ($request->hasFile('foto')) {
             try {
-                // hapus foto lama
+                // Hapus foto lama di Supabase jika ada
                 if ($guru->foto_guru) {
-                    $oldPath = public_path('uploads/Gambar_Guru/' . $guru->foto_guru);
-                    if (File::exists($oldPath)) File::delete($oldPath);
+                    $this->deleteFromSupabase($guru->foto_guru);
                 }
 
                 $file = $request->file('foto');
                 $fotoName = time() . '.webp';
-                $path = public_path('uploads/Gambar_Guru/' . $fotoName);
 
-                // Resize maksimal lebar 1200px, encode ke WebP 80%
-                Image::make($file)
-                    ->resize(1200, null, function ($constraint) {
-                        $constraint->aspectRatio();
-                        $constraint->upsize();
-                    })
-                    ->encode('webp', 80)
-                    ->save($path);
+                $uploaded = $this->uploadToSupabase($file, $fotoName);
+                if (!$uploaded) {
+                    throw new \Exception('Gagal mengunggah file baru ke Supabase Storage');
+                }
 
                 $guru->foto_guru = $fotoName;
             } catch (\Exception $e) {
@@ -181,15 +210,14 @@ class GuruController extends Controller
         try {
             $guru = Guru::findOrFail($id);
 
-            // hapus relasi
-            $guru->jadwal()->delete();
+            // Hapus relasi jadwal jika ada
+            if (method_exists($guru, 'jadwal')) {
+                $guru->jadwal()->delete();
+            }
 
-            // hapus foto
+            // Hapus foto di Supabase Storage
             if ($guru->foto_guru) {
-                $path = public_path('uploads/Gambar_Guru/' . $guru->foto_guru);
-                if (File::exists($path)) {
-                    File::delete($path);
-                }
+                $this->deleteFromSupabase($guru->foto_guru);
             }
 
             $guru->delete();
