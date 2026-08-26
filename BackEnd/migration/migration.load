@@ -1,0 +1,7 @@
+LOAD DATABASE
+     FROM mysql://username_mysql:password_mysql@host_lokal:3306/nama_db_mysql
+     INTO postgresql://postgres.xxxx:password_supabase@aws-0-region.pooler.supabase.com:6543/postgres
+
+WITH include drop, create tables, create indexes, reset sequences
+
+SET work_mem to '128MB', maintenance_work_mem to '512MB';
