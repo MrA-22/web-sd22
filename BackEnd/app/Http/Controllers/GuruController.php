@@ -144,27 +144,28 @@ class GuruController extends Controller
     }
 
     // ================= UPDATE =================
+    // ================= UPDATE =================
     public function update(Request $request, $id)
     {
-        $validator = Validator::make($request->all(), [
-            'nuptk' => 'required',
-            'nama' => 'required',
-            'tanggal_lahir' => 'required|date',
-            'mengajar' => 'required',
-            'alamat' => 'required',
-            'nohp' => 'required',
-            'foto' => 'nullable|image|max:10240'
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
         try {
             $guru = Guru::findOrFail($id);
+
+            $validator = Validator::make($request->all(), [
+                'nuptk' => 'required',
+                'nama' => 'required',
+                'tanggal_lahir' => 'required|date',
+                'mengajar' => 'required',
+                'alamat' => 'required',
+                'nohp' => 'required',
+                'foto' => 'nullable|image|max:10240'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => 'error',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
 
             if ($request->hasFile('foto')) {
                 // Hapus foto lama di Supabase jika ada
@@ -177,7 +178,10 @@ class GuruController extends Controller
 
                 $uploaded = $this->uploadToSupabase($file, $fotoName);
                 if (!$uploaded) {
-                    throw new \Exception('Gagal mengunggah file baru ke Supabase Storage');
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Gagal mengunggah file baru ke Supabase Storage'
+                    ], 500);
                 }
 
                 $guru->foto_guru = $fotoName;
@@ -198,9 +202,12 @@ class GuruController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            // Ini akan menangkap error PHP/Library apa pun dan menampilkannya dalam bentuk JSON
             return response()->json([
                 'status' => 'error',
-                'message' => 'Terjadi kesalahan server: ' . $e->getMessage()
+                'message' => 'Terjadi kesalahan server: ' . $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
             ], 500);
         }
     }
