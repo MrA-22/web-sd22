@@ -1,7 +1,7 @@
 // src/api/api.js
-const BASE_URL = "https://demoweb.mrapro.site/api";
+const BASE_URL = "https://data.mrapro.site/api";
 
-const BASE_STORAGE_URL = "https://demoweb.mrapro.site/uploads";
+const BASE_STORAGE_URL = "https://data.mrapro.site/uploads";
 async function request(url, options = {}) {
     try {
         const isFormData = options.body instanceof FormData;
