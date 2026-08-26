@@ -4,7 +4,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Link } from "react-router-dom";
 import "swiper/css";
 import "swiper/css/pagination";
-import { Autoplay } from "swiper";
+import { Autoplay } from "swiper/modules";
 import {
   BarChart,
   Bar,
