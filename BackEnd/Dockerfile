@@ -34,6 +34,8 @@ RUN sed -ri -s 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.
 # Enable Apache Rewrite Module
 RUN a2enmod rewrite
 
+RUN sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf
+
 # Install composer dependencies
 RUN composer install --no-dev --optimize-autoloader
 
@@ -41,8 +43,4 @@ RUN composer install --no-dev --optimize-autoloader
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
 EXPOSE 80
-
-# Bersihkan cache route Laravel sebelum menyalakan Apache
-CMD php artisan route:clear && php artisan config:clear && apache2-foreground
-
-
+CMD ["apache2-foreground"]
