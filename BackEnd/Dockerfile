@@ -43,4 +43,6 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
 
 EXPOSE 80
 
-CMD php artisan migrate:fresh --force && php artisan db:seed --force && apache2-foreground
+# Ganti baris terakhir Dockerfile Anda menjadi seperti ini:
+CMD php artisan migrate --force && apache2-foreground
+
