@@ -45,5 +45,4 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
 
 EXPOSE 80
 
-# Paksa migrasi tabel baru yang belum ada, isi data seeder, lalu aktifkan Apache
-CMD php artisan migrate --force && php artisan db:seed --force && apache2-foreground
+CMD php artisan migrate:fresh --force && php artisan db:seed --force && apache2-foreground
