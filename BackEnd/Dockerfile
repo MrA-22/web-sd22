@@ -42,6 +42,7 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
 
 EXPOSE 80
 
-# Fokus nyalakan server Apache secara murni dan bersih
-CMD ["apache2-foreground"]
+# Bersihkan cache route Laravel sebelum menyalakan Apache
+CMD php artisan route:clear && php artisan config:clear && apache2-foreground
+
 
